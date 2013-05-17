@@ -10,6 +10,7 @@
 #import "SDWebImageOperation.h"
 #import "SDWebImageDownloader.h"
 #import "SDImageCache.h"
+#import "SDAmazonImageDownloader.h"
 
 typedef enum
 {
@@ -104,6 +105,7 @@ typedef void(^SDWebImageCompletedWithFinishedBlock)(UIImage *image, NSError *err
 
 @property (strong, nonatomic, readonly) SDImageCache *imageCache;
 @property (strong, nonatomic, readonly) SDWebImageDownloader *imageDownloader;
+@property (strong, nonatomic, readonly) SDAmazonImageDownloader *amazonDownloader;
 
 /**
  * The cache filter is a block used each time SDWebImageManager need to convert an URL into a cache key. This can
@@ -153,6 +155,9 @@ typedef void(^SDWebImageCompletedWithFinishedBlock)(UIImage *image, NSError *err
                                    options:(SDWebImageOptions)options
                                   progress:(SDWebImageDownloaderProgressBlock)progressBlock
                                  completed:(SDWebImageCompletedWithFinishedBlock)completedBlock;
+
+- (void)amazonDownloadWithURL:(NSURL *)url completed:(SDAmazonImageDownloaderCompletedBlock)completedBlock withAccessKey:
+    (NSString *)accessKey withSecretKey:(NSString *)secretKey;
 
 /**
  * Cancel all current opreations

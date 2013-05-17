@@ -129,8 +129,10 @@ static const NSInteger kDefaultCacheMaxCacheAge = 60 * 60 * 24 * 7; // 1 week
                 // Can't use defaultManager another thread
                 NSFileManager *fileManager = NSFileManager.new;
 
+
                 if (![fileManager fileExistsAtPath:_diskCachePath])
                 {
+                    
                     [fileManager createDirectoryAtPath:_diskCachePath withIntermediateDirectories:YES attributes:nil error:NULL];
                 }
 

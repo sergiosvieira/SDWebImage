@@ -7,6 +7,8 @@
  */
 
 #import "SDWebImageManager.h"
+#import "SDAmazonImageDownloader.h"
+
 #import "UIImage+GIF.h"
 #import <objc/message.h>
 
@@ -21,12 +23,23 @@
 
 @property (strong, nonatomic, readwrite) SDImageCache *imageCache;
 @property (strong, nonatomic, readwrite) SDWebImageDownloader *imageDownloader;
+@property (strong, nonatomic, readwrite) SDAmazonImageDownloader *amazonDownloader;
 @property (strong, nonatomic) NSMutableArray *failedURLs;
 @property (strong, nonatomic) NSMutableArray *runningOperations;
 
 @end
 
 @implementation SDWebImageManager
+
+- (SDAmazonImageDownloader *)amazonDownloader
+{
+    if (!_amazonDownloader)
+    {
+        _amazonDownloader = [[SDAmazonImageDownloader alloc] init];
+    }
+    
+    return _amazonDownloader;
+}
 
 + (id)sharedManager
 {
@@ -206,6 +219,47 @@
     }];
 
     return operation;
+}
+
+- (void)amazonDownloadWithURL:(NSURL *)url completed:(SDAmazonImageDownloaderCompletedBlock)completedBlock withAccessKey:
+    (NSString *)accessKey withSecretKey:(NSString *)secretKey;
+{
+    if ([url isKindOfClass:NSString.class])
+    {
+        url = [NSURL URLWithString:(NSString *)url];
+    }
+
+    // Prevents app crashing on argument type error like sending NSNull instead of NSURL
+    if (![url isKindOfClass:NSURL.class])
+    {
+        url = nil;
+    }
+
+    NSString *key = [self cacheKeyForURL:url];
+    
+    [self.imageCache queryDiskCacheForKey:key done:^(UIImage *image, SDImageCacheType cacheType)
+    {
+        if (!image)
+        {
+            NSString *urlStr = [[url URLByDeletingLastPathComponent] absoluteString];
+            NSString *bucket = [urlStr substringWithRange:NSMakeRange(0, [urlStr length] - 1)];
+            NSString *filename = [[url path] lastPathComponent];
+            [self.amazonDownloader setAccessKey:accessKey];
+            [self.amazonDownloader setSecretKey:secretKey];
+            [self.amazonDownloader downloadWithBucket:bucket withFilename:filename completed:
+                ^(NSString *key, UIImage *image, NSError *error) {
+                if (image)
+                {
+                    [self.imageCache storeImage:image imageData:UIImageJPEGRepresentation(image, 1.f) forKey:key toDisk:YES];
+                }
+                completedBlock(key, image, error);
+            }];
+        }
+        else
+        {
+            completedBlock(key, image, nil);
+        }
+    }];
 }
 
 - (void)cancelAll
