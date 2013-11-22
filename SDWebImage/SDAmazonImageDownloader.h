@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AWSRuntime/AmazonServiceRequest.h>
 
 typedef void(^SDAmazonImageDownloaderCompletedBlock)(NSString *key, UIImage *image, NSError *error);
 

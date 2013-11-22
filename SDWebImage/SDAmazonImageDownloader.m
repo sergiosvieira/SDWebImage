@@ -7,8 +7,8 @@
 //
 
 #import "SDAmazonImageDownloader.h"
-#import <AWSiOSSDK/S3/AmazonS3Client.h>
-#import <AWSiOSSDK/AmazonServiceRequest.h>
+//#import <AWSiOSSDK/S3/AmazonS3Client.h>
+//#import <AWSiOSSDK/AmazonServiceRequest.h>
 
 
 @interface SDAmazonImageDownloader ()
