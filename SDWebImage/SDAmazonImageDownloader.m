@@ -55,7 +55,6 @@
 - (void)downloadWithBucket:(NSString *)bucket withFilename:(NSString *)filename completed:
     (SDAmazonImageDownloaderCompletedBlock)completedBlock
 {
-//    [AmazonLogger verboseLogging];
     
     S3GetObjectRequest  *request;
     S3GetObjectResponse *response;
@@ -69,31 +68,26 @@
         NSLog(@"Error:%@", response.error);
     }
     
-    [self addBlock:completedBlock withUrl:[request.url absoluteString] withRequest:request];
-}
-
-#pragma mark - Private Methods
-- (void)addBlock:(SDAmazonImageDownloaderCompletedBlock)completedBlock withUrl:(NSString *)url withRequest:
-    (AmazonServiceRequest *)request
-{
-    SDAmazonImageDownloaderCompletedBlock block = self.completedBlocks[url];
-    
-    if (!block)
-    {
-        self.completedBlocks[url] = completedBlock;
-    }
+    self.completedBlocks[@(request.hash)] = completedBlock;
 }
 
 #pragma mark - AmazonServiceRequestDelegate
 - (void)request:(AmazonServiceRequest *)request didCompleteWithResponse:(AmazonServiceResponse *)response
 {    
     UIImage *image = [UIImage imageWithData:response.body];
-    SDAmazonImageDownloaderCompletedBlock block = self.completedBlocks[[request.url absoluteString]];
+    S3GetObjectRequest *amazonRequest = (S3GetObjectRequest *)request;
+    SDAmazonImageDownloaderCompletedBlock block = self.completedBlocks[@(amazonRequest.hash)];
     
     NSMutableString *key = [[request.url path] mutableCopy];
     
     [key deleteCharactersInRange:NSMakeRange(0, 1)];
-    block([key copy], image, response.error);
+    
+    if (block)
+    {
+        block([key copy], image, response.error);
+        
+        [self.completedBlocks removeObjectForKey:@(amazonRequest.hash)];
+    }
 }
 
 @end
